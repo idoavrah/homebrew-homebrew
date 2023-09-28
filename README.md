@@ -1,4 +1,4 @@
-# Idoavrah Homebrew
+# idoavrah's Homebrew formulae
 
 ## How do I install these formulae?
 
