@@ -7,7 +7,7 @@ class Tftui < Formula
   sha256 "48525863ecb5ef16fcf471f7320133bd2d9a9cd7da298440abc0723a79991831"
   license "Apache-2.0"
 
-  depends_on "python@3.12"
+  depends_on "python@3.11"
 
   resource "aiohttp" do
     url "https://files.pythonhosted.org/packages/54/07/9467d3f8dae29b14f423b414d9e67512a76743c5bb7686fb05fe10c9cc3e/aiohttp-3.9.1.tar.gz"
