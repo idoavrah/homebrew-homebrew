@@ -3,11 +3,11 @@ class Tftui < Formula
 
   desc "Terminal-based textual UI for Terraform"
   homepage "https://github.com/idoavrah/terraform-tui"
-  url "https://files.pythonhosted.org/packages/fb/f4/6132cfd40b797a6f137e46a9b1c148912acbaf7c522f20c755d1a193ddbb/tftui-0.9.tar.gz"
-  sha256 "8bb06e62bd0b8599136cd648c59ddbd94f70ef89a8766e68e2f2d10492a4644a"
+  url "https://files.pythonhosted.org/packages/71/61/48eb33202d4a30fa55b6401e0a44e930e41f6ccd4dc04685594940b33f08/tftui-0.10.1.tar.gz"
+  sha256 "48525863ecb5ef16fcf471f7320133bd2d9a9cd7da298440abc0723a79991831"
   license "Apache-2.0"
 
-  depends_on "python@3.11"
+  depends_on "python@3.12"
 
   resource "aiohttp" do
     url "https://files.pythonhosted.org/packages/d6/12/6fc7c7dcc84e263940e87cbafca17c1ef28f39dae6c0b10f51e4ccc764ee/aiohttp-3.8.5.tar.gz"
@@ -109,6 +109,11 @@ class Tftui < Formula
     sha256 "1daff0494820c69bc8941e407aa20f577374ee88364ee10a98fdbe0aece96e29"
   end
 
+  resource "pyperclip" do
+    url "https://files.pythonhosted.org/packages/a7/2c/4c64579f847bd5d539803c8b909e54ba087a79d01bb3aba433a95879a6c5/pyperclip-1.8.2.tar.gz"
+    sha256 "105254a8b04934f0bc84e9c24eb360a591aaf6535c9def5f29d92af107a9bf57"
+  end
+
   resource "python-dateutil" do
     url "https://files.pythonhosted.org/packages/4c/c4/13b4776ea2d76c115c1d1b84579f3764ee6d57204f6be27119f13a61d0a9/python-dateutil-2.8.2.tar.gz"
     sha256 "0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"
@@ -170,6 +175,6 @@ class Tftui < Formula
   end
 
   test do
-    assert_match "\ntftui v0.9\n", shell_output("#{bin}/tftui --version")
+    assert_match "\ntftui v0.10.1\n", shell_output("#{bin}/tftui --version")
   end
 end
