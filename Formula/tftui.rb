@@ -175,6 +175,6 @@ class Tftui < Formula
   end
 
   test do
-    assert_match "\ntftui v0.11\n", shell_output("#{bin}/tftui --version")
+    assert_match "\ntftui v0.11.0\n", shell_output("#{bin}/tftui --version")
   end
 end
