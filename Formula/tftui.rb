@@ -3,8 +3,8 @@ class Tftui < Formula
 
   desc "Terminal-based textual UI for Terraform"
   homepage "https://github.com/idoavrah/terraform-tui"
-  url "https://files.pythonhosted.org/packages/67/32/46d564858f70ed09790db0c970d1ce59abd302efeeff19d990ba89588c64/tftui-0.11.0.tar.gz"
-  sha256 "944579f1be0d9188fec1b0f4863941dc514827979fd3ee0c8c503a8b12645e84"
+  url "https://files.pythonhosted.org/packages/70/a6/d4c24923d005c3271f75d0498d537c382d2d5f6fc59ef59f3f9e37c52c12/tftui-0.11.1.tar.gz"
+  sha256 "c1f428981d33c5ab7b4c50a490e61baf67e4dbb1c3795f8a3fb300349a5edd7d"
   license "Apache-2.0"
 
   depends_on "python@3.11"
@@ -175,6 +175,6 @@ class Tftui < Formula
   end
 
   test do
-    assert_match "\ntftui v0.11.0\n", shell_output("#{bin}/tftui --version")
+    assert_match "\ntftui v0.11.1\n", shell_output("#{bin}/tftui --version")
   end
 end
