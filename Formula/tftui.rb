@@ -1,7 +1,7 @@
 class Tftui < Formula
   include Language::Python::Virtualenv
 
-  desc "Terminal-based textual UI for Terraform"
+  desc "Terminal-based textual UI for Terraform" 
   homepage "https://github.com/idoavrah/terraform-tui"
   url "https://files.pythonhosted.org/packages/95/2c/28984b571ee9cfd22f1d435ee706a6e6642489959881a176f5d7fa6cad7e/tftui-0.12.5.tar.gz"
   sha256 "24be0293e6b8a4cb94e87539890b367f3f07a1d7216dc5300206f0a9da1a6d05"
