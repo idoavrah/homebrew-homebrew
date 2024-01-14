@@ -1,0 +1,49 @@
+  name: Bump tftui
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Create a fresh virtual environment and generate formula
+      run: |
+        python3 -m venv venv
+        source venv/bin/activate
+        venv/bin/pip install tftui homebrew-pypi-poet
+        poet -f tftui > Formula/tftui.rb
+        deactivate
+        rm -rf venv
+    - name: Replace description and test
+      run: |
+        python3 -c "
+        import re
+        content = open('Formula/tftui.rb').read()
+        content = re.sub(r'desc \"Shiny new formula\"', 'desc \"Terminal-based textual UI for Terraform\"', content)
+        content = re.sub(
+            r'test do.*?end',
+            'test do\\n    assert_match \"tftui, v\", shell_output(\"#{bin}/tftui --version\")\\n  end',
+            content,
+            flags=re.DOTALL
+        )
+        open('Formula/tftui.rb', 'w').write(content)
+        "
+        cat Formula/tftui.rb
+    - uses: actions/upload-artifact@v4
+      with:
+        name: formula
+        path: Formula/tftui.rb
+#    - name: Commit and push
+#      run: |-
+#        git config user.name "Automated"
+#        git config user.email "actions@users.noreply.github.com"
+#        git add -A
+#        timestamp=$(date -u)
+#        git commit -m "Update symbex: ${timestamp}" || exit 0
+#        git pull --rebase
+#        git push
