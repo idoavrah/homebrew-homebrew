@@ -11,6 +11,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Create a fresh virtual environment and generate formula
         run: |
           python3 -m venv venv
@@ -19,22 +20,18 @@ jobs:
           poet -f tftui > Formula/tftui.rb
           deactivate
           rm -rf venv
+
       - name: Replace description and test
         run: |
           sed -i '' 's/desc \"Shiny new formula\"/desc \"Terminal-based textual UI for Terraform\"/g' Formula/tftui.rb
           sed -i '' 's/false/true/g' Formula/tftui.rb
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: formula
-          path: Formula/tftui.*
-
-#    - name: Commit and push
-#      run: |-
-#        git config user.name "Automated"
-#        git config user.email "actions@users.noreply.github.com"
-#        git add -A
-#        timestamp=$(date -u)
-#        git commit -m "Update symbex: ${timestamp}" || exit 0
-#        git pull --rebase
-#        git push
+      - name: Commit and push
+        run: |-
+          git config user.name "Automated Action"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "bump $(tftui -v | tr -d '[\n]')" || exit 0
+          git pull --rebase
+          git push
