@@ -21,13 +21,14 @@ jobs:
           rm -rf venv
       - name: Replace description and test
         run: |
-          sed -i '' 's/desc \"Shiny new formula\"/desc \"Terminal-based textual UI for Terraform\"/g' tftui.rb
-          sed -i '' 's/\t\tfalse/\t\ttrue/g' tftui.rb
+          sed -i '' 's/desc \"Shiny new formula\"/desc \"Terminal-based textual UI for Terraform\"/g' Formula/tftui.rb
+          sed -i '' 's/false/true/g' Formula/tftui.rb
+
       - uses: actions/upload-artifact@v4
         with:
           name: formula
-          path: Formula/tftui.rb
-          
+          path: Formula/tftui.*
+
 #    - name: Commit and push
 #      run: |-
 #        git config user.name "Automated"
