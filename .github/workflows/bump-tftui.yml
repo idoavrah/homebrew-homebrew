@@ -1,4 +1,4 @@
-  name: Bump tftui
+name: Bump tftui
 
 on:
   workflow_dispatch:
