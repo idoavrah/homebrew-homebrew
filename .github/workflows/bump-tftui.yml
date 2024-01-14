@@ -18,8 +18,6 @@ jobs:
           source venv/bin/activate
           venv/bin/pip install tftui homebrew-pypi-poet
           poet -f tftui > Formula/tftui.rb
-          deactivate
-          rm -rf venv
 
       - name: Replace description and test
         run: |
