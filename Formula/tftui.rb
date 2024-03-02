@@ -3,8 +3,8 @@ class Tftui < Formula
 
   desc "Terminal-based textual UI for Terraform"
   homepage "https://github.com/idoavrah/terraform-tui"
-  url "https://files.pythonhosted.org/packages/95/2c/28984b571ee9cfd22f1d435ee706a6e6642489959881a176f5d7fa6cad7e/tftui-0.12.5.tar.gz"
-  sha256 "24be0293e6b8a4cb94e87539890b367f3f07a1d7216dc5300206f0a9da1a6d05"
+  url "https://files.pythonhosted.org/packages/0e/47/e9bda2e36940a797fb24a28b5af4bbd418515164df33937a1e8c1c407206/tftui-0.12.6.tar.gz"
+  sha256 "8bc3f7278e0c6ff076d0f2b46dc0e68501fa87cff5204a96dfb7fe1a40bf0470"
 
   depends_on "python3"
 
@@ -14,8 +14,8 @@ class Tftui < Formula
   end
 
   resource "certifi" do
-    url "https://files.pythonhosted.org/packages/d4/91/c89518dd4fe1f3a4e3f6ab7ff23cb00ef2e8c9adf99dacc618ad5e068e28/certifi-2023.11.17.tar.gz"
-    sha256 "9b469f3a900bf28dc19b8cfbf8019bf47f7fdd1a65a1d4ffb98fc14166beb4d1"
+    url "https://files.pythonhosted.org/packages/71/da/e94e26401b62acd6d91df2b52954aceb7f561743aa5ccc32152886c76c96/certifi-2024.2.2.tar.gz"
+    sha256 "0569859f95fc761b18b45ef421b1290a0f65f147e92a1e5eb3e635f9a5e4e66f"
   end
 
   resource "charset-normalizer" do
@@ -34,8 +34,8 @@ class Tftui < Formula
   end
 
   resource "linkify-it-py" do
-    url "https://files.pythonhosted.org/packages/8d/fd/73bb30ec2b3cd952fe139a79a40ce5f5fd0280dd2cc1de94c93ea6a714d2/linkify-it-py-2.0.2.tar.gz"
-    sha256 "19f3060727842c254c808e99d465c80c49d2c7306788140987a1a7a29b0d6ad2"
+    url "https://files.pythonhosted.org/packages/2a/ae/bb56c6828e4797ba5a4821eec7c43b8bf40f69cda4d4f5f8c8a2810ec96a/linkify-it-py-2.0.3.tar.gz"
+    sha256 "68cda27e162e9215c17d786649d1da0021a451bdc436ef9e0fa0ba5234b9b048"
   end
 
   resource "markdown-it-py" do
@@ -59,8 +59,8 @@ class Tftui < Formula
   end
 
   resource "posthog" do
-    url "https://files.pythonhosted.org/packages/ce/31/34ac0db1ff8de8716bae6edc36bcd41c90a9deff4431c5636dc86703db24/posthog-3.3.1.tar.gz"
-    sha256 "252cb6ab5cbe7ff002753f34fb647721b3af75034b4a5a631317ebf3db58fe59"
+    url "https://files.pythonhosted.org/packages/c3/ac/1c825a55febe87296b34684e046a4154f56a8f3d7e2a889b915828182345/posthog-3.4.2.tar.gz"
+    sha256 "f0eafa663fbc4a942b49b6168a62a890635407044bbc7593051dcb9cc1208873"
   end
 
   resource "Pygments" do
@@ -74,8 +74,8 @@ class Tftui < Formula
   end
 
   resource "python-dateutil" do
-    url "https://files.pythonhosted.org/packages/4c/c4/13b4776ea2d76c115c1d1b84579f3764ee6d57204f6be27119f13a61d0a9/python-dateutil-2.8.2.tar.gz"
-    sha256 "0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"
+    url "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz"
+    sha256 "37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3"
   end
 
   resource "requests" do
@@ -84,8 +84,8 @@ class Tftui < Formula
   end
 
   resource "rich" do
-    url "https://files.pythonhosted.org/packages/a7/ec/4a7d80728bd429f7c0d4d51245287158a1516315cadbb146012439403a9d/rich-13.7.0.tar.gz"
-    sha256 "5cb5123b5cf9ee70584244246816e9114227e0b98ad9176eede6ad54bf5403fa"
+    url "https://files.pythonhosted.org/packages/b3/01/c954e134dc440ab5f96952fe52b4fdc64225530320a910473c1fe270d9aa/rich-13.7.1.tar.gz"
+    sha256 "9be308cb1fe2f1f57d67ce99e95af38a1e2bc71ad9813b0e247cf7ffbcc3a432"
   end
 
   resource "six" do
@@ -99,18 +99,18 @@ class Tftui < Formula
   end
 
   resource "typing-extensions" do
-    url "https://files.pythonhosted.org/packages/0c/1d/eb26f5e75100d531d7399ae800814b069bc2ed2a7410834d57374d010d96/typing_extensions-4.9.0.tar.gz"
-    sha256 "23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783"
+    url "https://files.pythonhosted.org/packages/16/3a/0d26ce356c7465a19c9ea8814b960f8a36c3b0d07c323176620b7b483e44/typing_extensions-4.10.0.tar.gz"
+    sha256 "b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"
   end
 
   resource "uc-micro-py" do
-    url "https://files.pythonhosted.org/packages/75/db/241444fe6df6970a4c18d227193cad77fab7cec55d98e296099147de017f/uc-micro-py-1.0.2.tar.gz"
-    sha256 "30ae2ac9c49f39ac6dce743bd187fcd2b574b16ca095fa74cd9396795c954c54"
+    url "https://files.pythonhosted.org/packages/91/7a/146a99696aee0609e3712f2b44c6274566bc368dfe8375191278045186b8/uc-micro-py-1.0.3.tar.gz"
+    sha256 "d321b92cff673ec58027c04015fcaa8bb1e005478643ff4a500882eaab88c48a"
   end
 
   resource "urllib3" do
-    url "https://files.pythonhosted.org/packages/36/dd/a6b232f449e1bc71802a5b7950dc3675d32c6dbc2a1bd6d71f065551adb6/urllib3-2.1.0.tar.gz"
-    sha256 "df7aa8afb0148fa78488e7899b2c59b5f4ffcfa82e6c54ccb9dd37c1d7b52d54"
+    url "https://files.pythonhosted.org/packages/7a/50/7fd50a27caa0652cd4caf224aa87741ea41d3265ad13f010886167cfcc79/urllib3-2.2.1.tar.gz"
+    sha256 "d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"
   end
 
   resource "zipp" do
