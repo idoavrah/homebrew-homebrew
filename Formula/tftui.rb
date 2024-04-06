@@ -3,8 +3,8 @@ class Tftui < Formula
 
   desc "Terminal-based textual UI for Terraform"
   homepage "https://github.com/idoavrah/terraform-tui"
-  url "https://files.pythonhosted.org/packages/0e/47/e9bda2e36940a797fb24a28b5af4bbd418515164df33937a1e8c1c407206/tftui-0.12.6.tar.gz"
-  sha256 "8bc3f7278e0c6ff076d0f2b46dc0e68501fa87cff5204a96dfb7fe1a40bf0470"
+  url "https://files.pythonhosted.org/packages/df/31/96cf16bdf0502942296fd63d9648ad45644ca4d217f1b5d058772ec1871a/tftui-0.13.0.tar.gz"
+  sha256 "84aee6384f9af9b89a521c371ede5013b7a11777b6dd6a8b5ebf51c778952fc1"
 
   depends_on "python3"
 
@@ -29,8 +29,8 @@ class Tftui < Formula
   end
 
   resource "importlib-metadata" do
-    url "https://files.pythonhosted.org/packages/90/b4/206081fca69171b4dc1939e77b378a7b87021b0f43ce07439d49d8ac5c84/importlib_metadata-7.0.1.tar.gz"
-    sha256 "f238736bb06590ae52ac1fab06a3a9ef1d8dce2b7a35b5ab329371d6c8f5d2cc"
+    url "https://files.pythonhosted.org/packages/a0/fc/c4e6078d21fc4fa56300a241b87eae76766aa380a23fc450fc85bb7bf547/importlib_metadata-7.1.0.tar.gz"
+    sha256 "b78938b926ee8d5f020fc4772d487045805a55ddbad2ecf21c6d60938dc7fcd2"
   end
 
   resource "linkify-it-py" do
@@ -59,8 +59,8 @@ class Tftui < Formula
   end
 
   resource "posthog" do
-    url "https://files.pythonhosted.org/packages/c3/ac/1c825a55febe87296b34684e046a4154f56a8f3d7e2a889b915828182345/posthog-3.4.2.tar.gz"
-    sha256 "f0eafa663fbc4a942b49b6168a62a890635407044bbc7593051dcb9cc1208873"
+    url "https://files.pythonhosted.org/packages/d8/c8/8a7308d5355fedfc400098a75fd191cf615b55aa22ef2a937995326e6f5e/posthog-3.5.0.tar.gz"
+    sha256 "8f7e3b2c6e8714d0c0c542a2109b83a7549f63b7113a133ab2763a89245ef2ef"
   end
 
   resource "Pygments" do
@@ -99,8 +99,8 @@ class Tftui < Formula
   end
 
   resource "typing-extensions" do
-    url "https://files.pythonhosted.org/packages/16/3a/0d26ce356c7465a19c9ea8814b960f8a36c3b0d07c323176620b7b483e44/typing_extensions-4.10.0.tar.gz"
-    sha256 "b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"
+    url "https://files.pythonhosted.org/packages/f6/f3/b827b3ab53b4e3d8513914586dcca61c355fa2ce8252dea4da56e67bf8f2/typing_extensions-4.11.0.tar.gz"
+    sha256 "83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0"
   end
 
   resource "uc-micro-py" do
@@ -114,8 +114,8 @@ class Tftui < Formula
   end
 
   resource "zipp" do
-    url "https://files.pythonhosted.org/packages/58/03/dd5ccf4e06dec9537ecba8fcc67bbd4ea48a2791773e469e73f94c3ba9a6/zipp-3.17.0.tar.gz"
-    sha256 "84e64a1c28cf7e91ed2078bb8cc8c259cb19b76942096c8d7b84947690cabaf0"
+    url "https://files.pythonhosted.org/packages/3e/ef/65da662da6f9991e87f058bc90b91a935ae655a16ae5514660d6460d1298/zipp-3.18.1.tar.gz"
+    sha256 "2884ed22e7d8961de1c9a05142eb69a247f120291bc0206a00a7642f09b5b715"
   end
 
   def install
