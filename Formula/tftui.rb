@@ -3,8 +3,8 @@ class Tftui < Formula
 
   desc "Terminal-based textual UI for Terraform"
   homepage "https://github.com/idoavrah/terraform-tui"
-  url "https://files.pythonhosted.org/packages/1c/41/bfaeb94941ca1b8aadaa4c11b426dc6e395c6cc99721cce4bbc41a531003/tftui-0.13.1.tar.gz"
-  sha256 "194a615ec831d335e7f954920c8e4e739280cbee472dc01cb24f8d2cf423e5d6"
+  url "https://files.pythonhosted.org/packages/c2/e8/d85cf2ed6f40da3a2cf56c2cb5a4ed58a135c88a2cdc9a22206a63727065/tftui-0.13.2.tar.gz"
+  sha256 "b1cdd80300a5c37939a307c17c7b1eee4bdb1192d6e736607a3c76ad1706637e"
 
   depends_on "python3"
 
@@ -79,8 +79,8 @@ class Tftui < Formula
   end
 
   resource "requests" do
-    url "https://files.pythonhosted.org/packages/9d/be/10918a2eac4ae9f02f6cfe6414b7a155ccd8f7f9d4380d62fd5b955065c3/requests-2.31.0.tar.gz"
-    sha256 "942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1"
+    url "https://files.pythonhosted.org/packages/86/ec/535bf6f9bd280de6a4637526602a146a68fde757100ecf8c9333173392db/requests-2.32.2.tar.gz"
+    sha256 "dd951ff5ecf3e3b3aa26b40703ba77495dab41da839ae72ef3c8e5d8e2433289"
   end
 
   resource "rich" do
@@ -99,8 +99,8 @@ class Tftui < Formula
   end
 
   resource "typing-extensions" do
-    url "https://files.pythonhosted.org/packages/f6/f3/b827b3ab53b4e3d8513914586dcca61c355fa2ce8252dea4da56e67bf8f2/typing_extensions-4.11.0.tar.gz"
-    sha256 "83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0"
+    url "https://files.pythonhosted.org/packages/ce/6a/aa0a40b0889ec2eb81a02ee0daa6a34c6697a605cf62e6e857eead9e4f85/typing_extensions-4.12.0.tar.gz"
+    sha256 "8cbcdc8606ebcb0d95453ad7dc5065e6237b6aa230a31e81d0f440c30fed5fd8"
   end
 
   resource "uc-micro-py" do
@@ -114,8 +114,8 @@ class Tftui < Formula
   end
 
   resource "zipp" do
-    url "https://files.pythonhosted.org/packages/3e/ef/65da662da6f9991e87f058bc90b91a935ae655a16ae5514660d6460d1298/zipp-3.18.1.tar.gz"
-    sha256 "2884ed22e7d8961de1c9a05142eb69a247f120291bc0206a00a7642f09b5b715"
+    url "https://files.pythonhosted.org/packages/16/e5/8efdac4c61bd5fd24f4face2295103f42790ad2ad0f322e3a81bb8391812/zipp-3.18.2.tar.gz"
+    sha256 "6278d9ddbcfb1f1089a88fde84481528b07b0e10474e09dcfe53dad4069fa059"
   end
 
   def install
