@@ -3,8 +3,8 @@ class Tftui < Formula
 
   desc "Terminal-based textual UI for Terraform"
   homepage "https://github.com/idoavrah/terraform-tui"
-  url "https://files.pythonhosted.org/packages/c2/e8/d85cf2ed6f40da3a2cf56c2cb5a4ed58a135c88a2cdc9a22206a63727065/tftui-0.13.2.tar.gz"
-  sha256 "b1cdd80300a5c37939a307c17c7b1eee4bdb1192d6e736607a3c76ad1706637e"
+  url "https://files.pythonhosted.org/packages/40/d7/2bb77932f0c62ef9dd2bd0311d9df46a2d0e28084d354ebc265407eb349e/tftui-0.13.3.tar.gz"
+  sha256 "fbfaf37cc6af8606ea3b32609cd140e8b374bb1f529a27f756f8ba07924b56c9"
 
   depends_on "python3"
 
@@ -114,8 +114,8 @@ class Tftui < Formula
   end
 
   resource "zipp" do
-    url "https://files.pythonhosted.org/packages/16/e5/8efdac4c61bd5fd24f4face2295103f42790ad2ad0f322e3a81bb8391812/zipp-3.18.2.tar.gz"
-    sha256 "6278d9ddbcfb1f1089a88fde84481528b07b0e10474e09dcfe53dad4069fa059"
+    url "https://files.pythonhosted.org/packages/e2/ec/48de0d79306a109f9872cca6b48e360e3d2d28893f472a3011005511985f/zipp-3.19.0.tar.gz"
+    sha256 "952df858fb3164426c976d9338d3961e8e8b3758e2e059e0f754b8c4262625ee"
   end
 
   def install
