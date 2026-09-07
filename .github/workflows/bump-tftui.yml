@@ -1,38 +1,244 @@
 name: bump tftui
 
 on:
+  schedule:
+    # Daily at 06:17 UTC. Offset from the hour so we are not competing with
+    # everyone else's on-the-hour cron jobs for runners.
+    - cron: "17 6 * * *"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to bump to (blank = whatever PyPI says is latest)"
+        required: false
+        type: string
+      dry_run:
+        description: "Update, audit, build and test, but do not commit or push"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
+# Never let two bumps race each other onto main.
+concurrency:
+  group: bump-tftui
+  cancel-in-progress: false
+
 jobs:
-  bump-version:
+  bump:
     runs-on: macos-latest
+    env:
+      FORMULA_FILE: Formula/tftui.rb
+      FORMULA_REF: idoavrah/homebrew/tftui
+      PYPI_PACKAGE: tftui
+      HOMEBREW_NO_ANALYTICS: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_ENV_HINTS: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+
     steps:
-      - uses: actions/checkout@v3
+      # Do this before the tap symlink exists, otherwise `brew update` would
+      # try to git-pull our own checkout out from under us.
+      - name: Update Homebrew itself
+        run: brew update --quiet
 
-      - name: Create a fresh virtual environment and generate formula
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          venv/bin/pip install tftui homebrew-pypi-poet
-          poet -f tftui > Formula/tftui.rb
-          tftui -v | tr -d '[\n]' > tftui.version
-          deactivate
-          rm -rf venv
+      - name: Check out the tap
+        uses: actions/checkout@v5
 
-      - name: Replace description and test
+      - name: Expose the checkout to Homebrew as a tap
         run: |
-          sed -i '' 's/desc \"Shiny new formula\"/desc \"Terminal-based textual UI for Terraform\"/g' Formula/tftui.rb
-          sed -i '' 's/false/true/g' Formula/tftui.rb
+          set -euo pipefail
+          taps="$(brew --repository)/Library/Taps/idoavrah"
+          mkdir -p "$taps"
+          ln -sfn "$GITHUB_WORKSPACE" "$taps/homebrew-homebrew"
+          brew tap-info "${FORMULA_REF%/*}"
+
+      - name: Decide whether there is anything to bump
+        id: check
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          current="$(brew info --json=v2 "$FORMULA_REF" | jq -er '.formulae[0].versions.stable')"
+
+          if [ -n "$INPUT_VERSION" ]; then
+            target="$INPUT_VERSION"
+            echo "Version $target was requested explicitly."
+          else
+            target="$(curl -fsSL --retry 3 "https://pypi.org/pypi/$PYPI_PACKAGE/json" | jq -er '.info.version')"
+            echo "PyPI reports $target as the latest release."
+          fi
+
+          echo "formula is at $current, target is $target"
+
+          if [ "$current" = "$target" ]; then
+            echo "Already up to date; nothing to do."
+            bump=false
+          else
+            # 0 = target is newer, 1 = it is not, 2 = one of them did not parse.
+            # Keeping "older" and "unparseable" apart matters: an unparseable
+            # version must never be allowed through as a downgrade.
+            set +e
+            ruby -rrubygems -e '
+              begin
+                newer = Gem::Version.new(ARGV[0]) > Gem::Version.new(ARGV[1])
+              rescue ArgumentError => e
+                warn("cannot parse version: #{e.message}")
+                exit 2
+              end
+              exit(newer ? 0 : 1)
+            ' "$target" "$current"
+            compared=$?
+            set -e
+
+            case "$compared" in
+              0)
+                bump=true
+                ;;
+              1)
+                if [ -n "$INPUT_VERSION" ]; then
+                  echo "::warning::$target is older than $current -- downgrading because it was asked for explicitly."
+                  bump=true
+                else
+                  echo "::error::PyPI's latest ($target) is older than the formula ($current). Refusing to downgrade."
+                  exit 1
+                fi
+                ;;
+              *)
+                echo "::error::could not compare $target against $current"
+                exit 1
+                ;;
+            esac
+          fi
+
+          {
+            echo "bump=$bump"
+            echo "current=$current"
+            echo "target=$target"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Point the formula at the new sdist
+        if: steps.check.outputs.bump == 'true'
+        env:
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+
+          # PyPI is the source of truth for both the URL and the checksum, so
+          # there is no separate download-and-shasum step to get out of sync.
+          release="$(curl -fsSL --retry 3 "https://pypi.org/pypi/$PYPI_PACKAGE/$TARGET/json")"
+          URL="$(jq -er '[.urls[] | select(.packagetype == "sdist")][0].url' <<<"$release")"
+          SHA="$(jq -er '[.urls[] | select(.packagetype == "sdist")][0].digests.sha256' <<<"$release")"
+          export URL SHA
+          echo "sdist: $URL"
+
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+
+          path = pathlib.Path(os.environ["FORMULA_FILE"])
+          text = path.read_text()
+
+          # Only rewrite the formula's own url/sha256, never a resource's. Both
+          # live above the first resource block (or above `def install` if the
+          # formula has no resources yet).
+          starts = [text.index(m) for m in ("\n  resource ", "\n  def install") if m in text]
+          if not starts:
+              sys.exit(f"{path}: found neither a resource block nor `def install`")
+          cut = min(starts)
+          head, tail = text[:cut], text[cut:]
+
+          def replace(field, value, source):
+              pattern = rf'^(\s*{field}\s+)"[^"]*"'
+              new, count = re.subn(
+                  pattern, lambda m: m.group(1) + '"' + value + '"', source, count=1, flags=re.M
+              )
+              if count != 1:
+                  sys.exit(f"{path}: expected exactly one top-level `{field}`, found {count}")
+              return new
+
+          head = replace("url", os.environ["URL"], head)
+          head = replace("sha256", os.environ["SHA"], head)
+          path.write_text(head + tail)
+          print(f"rewrote url and sha256 in {path}")
+          PY
+
+      - name: Refresh the vendored Python resources
+        if: steps.check.outputs.bump == 'true'
+        run: |
+          set -euo pipefail
+          # Homebrew hides PyPI releases younger than a day, which is exactly
+          # the window a bump job runs in, so opt the main package out of that
+          # cooldown. Dependencies still respect it.
+          brew update-python-resources \
+            --ignore-main-package-cooldown \
+            --install-dependencies \
+            "$FORMULA_REF"
+
+      - name: Confirm the formula actually reports the new version
+        if: steps.check.outputs.bump == 'true'
+        env:
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+          got="$(brew info --json=v2 "$FORMULA_REF" | jq -er '.formulae[0].versions.stable')"
+          if [ "$got" != "$TARGET" ]; then
+            echo "::error::formula reports $got after the edit, expected $TARGET"
+            exit 1
+          fi
+          git --no-pager diff --stat -- "$FORMULA_FILE"
+
+      - name: Audit
+        if: steps.check.outputs.bump == 'true'
+        run: brew audit --strict --online "$FORMULA_REF"
+
+      - name: Build from source and run the formula's test
+        if: steps.check.outputs.bump == 'true'
+        run: |
+          set -euo pipefail
+          brew install --build-from-source "$FORMULA_REF"
+          brew test "$FORMULA_REF"
 
       - name: Commit and push
-        run: |-
-          git config user.name "Automated Action"
-          git config user.email "actions@users.noreply.github.com"
-          git add Formula/tftui.rb
-          timestamp=$(date -u)
-          git commit -m "bump $(cat tftui.version)" || exit 0
-          git pull --rebase
+        if: steps.check.outputs.bump == 'true' && inputs.dry_run != true
+        env:
+          CURRENT: ${{ steps.check.outputs.current }}
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- "$FORMULA_FILE"; then
+            echo "::error::version check said $CURRENT -> $TARGET but the formula is unchanged"
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$FORMULA_FILE"
+          git commit -m "bump tftui to $TARGET"
+
+          # Cheap insurance in case main moved while we were building.
+          git pull --rebase --autostash
           git push
+
+      - name: Summary
+        if: always() && steps.check.outcome == 'success'
+        env:
+          BUMPED: ${{ steps.check.outputs.bump }}
+          CURRENT: ${{ steps.check.outputs.current }}
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+          if [ "$BUMPED" = "true" ]; then
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "Dry run: tftui $CURRENT -> $TARGET built and tested, not pushed." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Bumped tftui $CURRENT -> $TARGET." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "tftui is already at $CURRENT; nothing to do." >> "$GITHUB_STEP_SUMMARY"
+          fi
