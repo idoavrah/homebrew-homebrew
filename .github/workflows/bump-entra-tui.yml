@@ -1,0 +1,272 @@
+name: bump entra-tui
+
+on:
+  schedule:
+    # Daily at 06:37 UTC. Offset from the hour so we are not competing with
+    # everyone else's on-the-hour cron jobs for runners, and offset from the
+    # tftui bump so the two do not queue behind each other.
+    - cron: "37 6 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to bump to (blank = whatever the latest GitHub release is)"
+        required: false
+        type: string
+      dry_run:
+        description: "Update, audit, install and test, but do not commit or push"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Never let two bumps race each other onto main.
+concurrency:
+  group: bump-entra-tui
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: macos-latest
+    env:
+      FORMULA_FILE: Formula/entra-tui.rb
+      FORMULA_REF: idoavrah/homebrew/entra-tui
+      UPSTREAM_REPO: idoavrah/entra-tui
+      GH_TOKEN: ${{ github.token }}
+      HOMEBREW_NO_ANALYTICS: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_ENV_HINTS: 1
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+
+    steps:
+      # Do this before the tap symlink exists, otherwise `brew update` would
+      # try to git-pull our own checkout out from under us.
+      - name: Update Homebrew itself
+        run: brew update --quiet
+
+      - name: Check out the tap
+        uses: actions/checkout@v5
+
+      - name: Expose the checkout to Homebrew as a tap
+        run: |
+          set -euo pipefail
+          taps="$(brew --repository)/Library/Taps/idoavrah"
+          mkdir -p "$taps"
+          ln -sfn "$GITHUB_WORKSPACE" "$taps/homebrew-homebrew"
+          brew tap-info "${FORMULA_REF%/*}"
+
+      - name: Decide whether there is anything to bump
+        id: check
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          current="$(brew info --json=v2 "$FORMULA_REF" | jq -er '.formulae[0].versions.stable')"
+
+          if [ -n "$INPUT_VERSION" ]; then
+            # Accept either "0.2.0" or "v0.2.0"; the formula stores the bare
+            # version and the tag carries the "v".
+            target="${INPUT_VERSION#v}"
+            tag="v$target"
+            echo "Version $target was requested explicitly."
+          else
+            # /releases/latest skips drafts and pre-releases, which is what we
+            # want: goreleaser marks -rc tags as pre-releases automatically.
+            tag="$(gh api "repos/$UPSTREAM_REPO/releases/latest" --jq '.tag_name')"
+            target="${tag#v}"
+            echo "GitHub reports $tag as the latest release."
+          fi
+
+          echo "formula is at $current, target is $target"
+
+          if [ "$current" = "$target" ]; then
+            echo "Already up to date; nothing to do."
+            bump=false
+          else
+            # 0 = target is newer, 1 = it is not, 2 = one of them did not parse.
+            # Keeping "older" and "unparseable" apart matters: an unparseable
+            # version must never be allowed through as a downgrade.
+            set +e
+            ruby -rrubygems -e '
+              begin
+                newer = Gem::Version.new(ARGV[0]) > Gem::Version.new(ARGV[1])
+              rescue ArgumentError => e
+                warn("cannot parse version: #{e.message}")
+                exit 2
+              end
+              exit(newer ? 0 : 1)
+            ' "$target" "$current"
+            compared=$?
+            set -e
+
+            case "$compared" in
+              0)
+                bump=true
+                ;;
+              1)
+                if [ -n "$INPUT_VERSION" ]; then
+                  echo "::warning::$target is older than $current -- downgrading because it was asked for explicitly."
+                  bump=true
+                else
+                  echo "::error::the latest release ($target) is older than the formula ($current). Refusing to downgrade."
+                  exit 1
+                fi
+                ;;
+              *)
+                echo "::error::could not compare $target against $current"
+                exit 1
+                ;;
+            esac
+          fi
+
+          {
+            echo "bump=$bump"
+            echo "current=$current"
+            echo "target=$target"
+            echo "tag=$tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Point the formula at the new release
+        if: steps.check.outputs.bump == 'true'
+        env:
+          CURRENT: ${{ steps.check.outputs.current }}
+          TARGET: ${{ steps.check.outputs.target }}
+          TAG: ${{ steps.check.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          # The release's own checksums.txt is the source of truth for every
+          # digest, so there is no separate download-and-shasum step to get out
+          # of sync with it.
+          gh release download "$TAG" --repo "$UPSTREAM_REPO" \
+            --pattern checksums.txt --output checksums.txt --clobber
+          cat checksums.txt
+
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+
+          current = os.environ["CURRENT"]
+          target = os.environ["TARGET"]
+
+          sums = {}
+          for line in pathlib.Path("checksums.txt").read_text().splitlines():
+              if not line.strip():
+                  continue
+              digest, name = line.split(None, 1)
+              sums[name.strip()] = digest
+
+          path = pathlib.Path(os.environ["FORMULA_FILE"])
+          text = path.read_text()
+
+          # Rewrite each sha256 from the URL sitting above it, rather than from
+          # a hardcoded list of platforms, so adding or dropping an arch block
+          # in the formula needs no change here.
+          pair = re.compile(
+              r'^(?P<indent>[ \t]*)url\s+"(?P<url>[^"]*)"\n(?P<pad>[ \t]*)sha256\s+"[^"]*"$',
+              re.M,
+          )
+
+          missing = []
+          stale = []
+
+          def rewrite(match):
+              url = match.group("url")
+              # The version shows up twice in every URL -- once in the tag and
+              # once in the asset name -- and both need to move.
+              if current not in url:
+                  stale.append(url)
+                  return match.group(0)
+              url = url.replace(current, target)
+              asset = url.rsplit("/", 1)[-1]
+              if asset not in sums:
+                  missing.append(asset)
+                  return match.group(0)
+              return (
+                  f'{match.group("indent")}url "{url}"\n'
+                  f'{match.group("pad")}sha256 "{sums[asset]}"'
+              )
+
+          text, pairs = pair.subn(rewrite, text)
+          if pairs == 0:
+              sys.exit(f"{path}: found no url/sha256 pairs to rewrite")
+          if stale:
+              sys.exit(f"{path}: these URLs do not mention {current}: {', '.join(stale)}")
+          if missing:
+              sys.exit(f"{path}: release {target} has no checksum for: {', '.join(missing)}")
+
+          path.write_text(text)
+          print(f"rewrote {pairs} url/sha256 pairs in {path}: {current} -> {target}")
+          PY
+
+          rm -f checksums.txt
+
+      - name: Confirm the formula actually reports the new version
+        if: steps.check.outputs.bump == 'true'
+        env:
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+          got="$(brew info --json=v2 "$FORMULA_REF" | jq -er '.formulae[0].versions.stable')"
+          if [ "$got" != "$TARGET" ]; then
+            echo "::error::formula reports $got after the edit, expected $TARGET"
+            exit 1
+          fi
+          git --no-pager diff -- "$FORMULA_FILE"
+
+      - name: Audit
+        if: steps.check.outputs.bump == 'true'
+        run: brew audit --strict --online "$FORMULA_REF"
+
+      # No --build-from-source here: the formula ships GoReleaser binaries, so
+      # installing it is what actually proves the url and sha256 are right.
+      - name: Install and run the formula's test
+        if: steps.check.outputs.bump == 'true'
+        run: |
+          set -euo pipefail
+          brew install "$FORMULA_REF"
+          brew test "$FORMULA_REF"
+
+      - name: Commit and push
+        if: steps.check.outputs.bump == 'true' && inputs.dry_run != true
+        env:
+          CURRENT: ${{ steps.check.outputs.current }}
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- "$FORMULA_FILE"; then
+            echo "::error::version check said $CURRENT -> $TARGET but the formula is unchanged"
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$FORMULA_FILE"
+          git commit -m "bump entra-tui to $TARGET"
+
+          # Cheap insurance in case main moved while we were installing.
+          git pull --rebase --autostash
+          git push
+
+      - name: Summary
+        if: always() && steps.check.outcome == 'success'
+        env:
+          BUMPED: ${{ steps.check.outputs.bump }}
+          CURRENT: ${{ steps.check.outputs.current }}
+          TARGET: ${{ steps.check.outputs.target }}
+        run: |
+          set -euo pipefail
+          if [ "$BUMPED" = "true" ]; then
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "Dry run: entra-tui $CURRENT -> $TARGET installed and tested, not pushed." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Bumped entra-tui $CURRENT -> $TARGET." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "entra-tui is already at $CURRENT; nothing to do." >> "$GITHUB_STEP_SUMMARY"
+          fi
